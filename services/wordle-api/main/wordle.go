@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 )
 
 const (
@@ -11,6 +12,8 @@ const (
 )
 
 func ProcessWord(word, answer string) ([]string, error) {
+	word = strings.ToUpper(word)
+
 	guessLetters := SplitWord(word)
 	answerLetters := SplitWord(answer)
 
