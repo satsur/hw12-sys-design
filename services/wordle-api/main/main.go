@@ -18,15 +18,27 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		word := r.URL.Query().Get("word")
 
-		result, _ := ProcessWord(word, answer)
+		if word == "" {
+			http.Error(w, `"word" parameter not supplied.`, http.StatusBadRequest)
+			return
+		}
+
+		result, err := ProcessWord(word, answer)
 		resp := ResponseBody{
 			Results: result,
+		}
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
 func main() {
