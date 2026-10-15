@@ -11,6 +11,8 @@ const (
 	absent  = "absent"
 )
 
+var ErrWordLength = errors.New("Guess length must match answer length")
+
 func ProcessWord(word, answer string) ([]string, error) {
 	word = strings.ToUpper(word)
 
@@ -18,7 +20,7 @@ func ProcessWord(word, answer string) ([]string, error) {
 	answerLetters := SplitWord(answer)
 
 	if len(guessLetters) != len(answerLetters) {
-		return nil, errors.New("Guess length must match answer length")
+		return nil, ErrWordLength
 	}
 
 	result := make([]string, len(answerLetters))
