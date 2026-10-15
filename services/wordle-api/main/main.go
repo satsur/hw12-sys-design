@@ -3,10 +3,14 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math/rand/v2"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 )
 
-const answer = "SLATE"
+var answer string
 
 type ResponseBody struct {
 	Results []string
@@ -33,12 +37,27 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		simulateLatency()
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+func simulateLatency() {
+	ms := 10 + rand.IntN(90)
+	time.Sleep(time.Duration(ms) * time.Millisecond)
+}
+
+func init() {
+	// load answer into memory on startu
+	target := os.Getenv("WORDLE_ANSWER")
+	if target == "" {
+		target = "WORLD" // fallback
+	}
+	answer = strings.ToUpper(target)
 }
 
 func main() {
