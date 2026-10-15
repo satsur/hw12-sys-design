@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -52,15 +53,25 @@ func simulateLatency() {
 }
 
 func init() {
+	fmt.Println("Starting Wordle...")
+
 	// load answer into memory on startu
 	target := os.Getenv("WORDLE_ANSWER")
 	if target == "" {
+		fmt.Println("Could not get saved Wordle answer, falling back to default...")
 		target = "WORLD" // fallback
 	}
 	answer = strings.ToUpper(target)
+
+	fmt.Println("Today's Wordle Answer: " + answer)
 }
 
 func main() {
+	port := os.Getenv("WORDLE_PORT")
+	if port == "" {
+		port = "8080"
+	}
+	fmt.Println("Now listening on port " + port)
 	http.HandleFunc("/wordle", handleRequest)
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
