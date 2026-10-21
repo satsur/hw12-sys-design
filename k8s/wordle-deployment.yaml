@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordle-api
+  labels: 
+    app: wordle-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordle-api
+  template:
+    metadata: 
+      labels:
+        app: wordle-api
+    spec: 
+      containers:
+        - name: wordle-api
+          image: hw12-sys-design-wordle-api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            -
+              name: WORDLE_PORT
+              value: "8080"
+            -
+              name: WORDLE_ANSWER
+              value: "DESKS"
+ 
