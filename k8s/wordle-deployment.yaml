@@ -16,7 +16,7 @@ spec:
     spec: 
       containers:
         - name: wordle-api
-          image: hw12-sys-design-wordle-api:latest
+          image: wordle-api:latest
           ports:
             - containerPort: 8080
           env:
