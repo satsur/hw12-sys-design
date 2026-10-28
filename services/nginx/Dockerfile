@@ -4,4 +4,4 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx_proxy.conf /etc/nginx/conf.d/nginx_proxy.conf
 
-EXPOSE 80
+EXPOSE 8080

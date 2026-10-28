@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Wordle Web</title>
+        <style>
+        body { font-family: -apple-system, system-ui, sans-serif; max-width: 480px;
+                margin: 30px auto; text-align: center; background: #fafafa; }
+        h1 { margin-bottom: 4px; }
+        .pod { color: #666; font-size: 13px; margin-bottom: 24px; }
+        .pod code { background: #eee; padding: 2px 6px; border-radius: 3px; }
+        .row { margin: 4px 0; }
+        .cell { display: inline-block; width: 44px; height: 44px; line-height: 44px;
+                border: 2px solid #d3d6da; margin: 2px; font-weight: bold;
+                font-size: 22px; background: white; }
+        .correct { background: #6aaa64; color: white; border-color: #6aaa64; }
+        .present { background: #c9b458; color: white; border-color: #c9b458; }
+        .absent  { background: #787c7e; color: white; border-color: #787c7e; }
+        input { font-size: 18px; padding: 8px; width: 140px; text-transform: uppercase;
+                border: 2px solid #d3d6da; border-radius: 4px; }
+        button { font-size: 18px; padding: 8px 16px; margin-left: 4px; border: none;
+                    background: #6aaa64; color: white; border-radius: 4px; cursor: pointer; }
+        #status { margin-top: 18px; font-weight: bold; min-height: 24px; }
+        </style>
+        <script src="index.js" defer></script>
+    </head>
+    <body>
+        <h1>Wordle Web</h1>
+        <div class="pod">Served by: <code>__HOSTNAME__</code></div>
+        <div id="board"></div>
+        <div>
+        <input id="guess" maxlength="5" autocomplete="off" autofocus />
+        <button onclick="submit()">Guess</button>
+        </div>
+        <div id="status"></div>
+    </body>
+</html>
