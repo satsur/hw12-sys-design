@@ -2,16 +2,18 @@ package loadgen
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
 
 const baseUrl = "/wordle"
-const maxRPS = 100    // requests per second
-var targetRPS = 0     // requests per second
-var loadDuration = 10 // seconds
+const maxRPS = 100       // requests per second
+var defaultRPS = 0       // requests per second
+var defaultDuration = 10 // seconds
 
 func sendRequest(word string) (*http.Response, error) {
 	u, err := url.Parse(baseUrl)
@@ -29,22 +31,43 @@ func sendRequest(word string) (*http.Response, error) {
 // newRate in requests per second
 func updateRate(newRate int) {
 	if newRate >= 0 {
-		targetRPS = newRate
+		defaultRPS = newRate
 	}
 }
 
 func updateDuration(newDuration int) {
 	if newDuration >= 0 {
-		loadDuration = newDuration
+		defaultDuration = newDuration
 	}
 }
 
-func main() {
+// Request accepts two query params
+// 'rps' = rate per second of load test
+// 'duration' = duration in seconds of the test
+func start(w http.ResponseWriter, req *http.Request) {
 	word := "hello"
 
-	duration := time.Duration(loadDuration) * time.Second
-	ticker := time.NewTicker(time.Second / time.Duration(targetRPS))
-	timeout := time.After(duration)
+	rpsParam := req.URL.Query().Get("rps")
+	durationParam := req.URL.Query().Get("duration")
+
+	rps := defaultRPS
+	if rpsParam != "" {
+		intRPS, err := strconv.Atoi(rpsParam)
+		if err == nil {
+			rps = intRPS
+		}
+	}
+
+	duration := defaultDuration
+	if durationParam != "" {
+		intDuration, err := strconv.Atoi(durationParam)
+		if err == nil {
+			duration = intDuration
+		}
+	}
+
+	ticker := time.NewTicker()
+	timeout := time.After(time.Duration(duration) * time.Second)
 	var successCount int64
 
 	for {
@@ -67,4 +90,11 @@ func main() {
 			}()
 		}
 	}
+}
+
+func main() {
+	port := "8080"
+	http.HandleFunc("/start", start)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+
 }
