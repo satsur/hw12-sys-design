@@ -7,6 +7,8 @@
         body { font-family: -apple-system, system-ui, sans-serif; max-width: 480px;
                 margin: 30px auto; text-align: center; background: #fafafa; }
         h1 { margin-bottom: 4px; }
+        nav { margin-bottom: 24px; }
+        nav a { color: #007f7b; font-weight: bold; text-decoration: none; }
         .pod { color: #666; font-size: 13px; margin-bottom: 24px; }
         .pod code { background: #eee; padding: 2px 6px; border-radius: 3px; }
         .row { margin: 4px 0; }
@@ -26,6 +28,7 @@
     </head>
     <body>
         <h1>Wordle Web</h1>
+        <nav><a href="/metrics">View system metrics</a></nav>
         <div class="pod">Served by: <code>__HOSTNAME__</code></div>
         <div id="board"></div>
         <div>
