@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+    spec:
+      containers:
+        - name: loadgen
+          image: loadgen:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOADGEN_TARGET_URL
+              value: "http://nginx-service:80/wordle"
+            - name: LOADGEN_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadgen-service
+  labels:
+    app: loadgen
+spec:
+  type: ClusterIP
+  selector:
+    app: loadgen
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

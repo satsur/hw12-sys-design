@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from collections import deque
 from contextlib import asynccontextmanager, suppress
@@ -6,7 +7,8 @@ from datetime import datetime, timezone
 from threading import Lock
 from typing import Any
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from fastapi import FastAPI, HTTPException
 from kubernetes import client, config
@@ -16,6 +18,7 @@ DEFAULT_DEPLOYMENTS = ("wordle-api", "nginx-proxy", "web")
 METRICS_INTERVAL_SECONDS = 5
 METRICS_BUFFER_SIZE = 300
 NGINX_SERVICE_URL = "http://nginx-service:80"
+LOADGEN_SERVICE_URL = "http://loadgen-service:8080"
 
 
 class ScaleRequest(BaseModel):
@@ -29,6 +32,12 @@ class SelfHealRequest(BaseModel):
 
 class LoadBalancingRequest(BaseModel):
     algorithm: str
+
+
+class LoadTestRequest(BaseModel):
+    rps: int = Field(ge=1, le=1000)
+    duration: int = Field(ge=1, le=300)
+    word: str = Field(default="hello", min_length=1, max_length=20)
 
 
 _events: list[dict[str, Any]] = []
@@ -95,19 +104,19 @@ def nginx_status() -> dict[str, int]:
         lines = [line.decode().strip() for line in response.readlines()]
 
     request_counts = [int(value) for value in lines[2].split()]
-    connection_counts = [
-        int(value.split(":", 1)[1].strip())
-        for value in lines[3].split()
-        if ":" in value
-    ]
+    connection_counts: dict[str, int] = {}
+    connection_tokens = lines[3].split()
+    for index, token in enumerate(connection_tokens[:-1]):
+        if token.endswith(":"):
+            connection_counts[token[:-1].lower()] = int(connection_tokens[index + 1])
     return {
         "active_connections": int(lines[0].split(":", 1)[1].strip()),
         "accepts": request_counts[0],
         "handled": request_counts[1],
         "requests": request_counts[2],
-        "reading": connection_counts[0],
-        "writing": connection_counts[1],
-        "waiting": connection_counts[2],
+        "reading": connection_counts["reading"],
+        "writing": connection_counts["writing"],
+        "waiting": connection_counts["waiting"],
     }
 
 
@@ -117,6 +126,24 @@ def probe_latency_ms() -> float:
     with urlopen(f"{NGINX_SERVICE_URL}/wordle?{query}", timeout=10):
         pass
     return round((time.perf_counter() - started) * 1000, 2)
+
+
+def loadgen_request(method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
+    body = None if payload is None else json.dumps(payload).encode()
+    request = Request(
+        f"{LOADGEN_SERVICE_URL}{path}",
+        data=body,
+        headers={"Content-Type": "application/json"} if body else {},
+        method=method,
+    )
+    try:
+        with urlopen(request, timeout=5) as response:
+            return json.loads(response.read())
+    except HTTPError as error:
+        detail = error.read().decode() or "load generator returned an error"
+        raise HTTPException(status_code=error.code, detail=detail) from error
+    except URLError as error:
+        raise HTTPException(status_code=503, detail=f"load generator unavailable: {error.reason}") from error
 
 
 def collect_metric_sample() -> None:
@@ -244,6 +271,29 @@ def load_balancing(request: LoadBalancingRequest) -> dict[str, str]:
         "algorithm": request.algorithm,
         "message": "Load-balancing changes are not implemented yet.",
     }
+
+
+@app.post("/api/v1/load-tests")
+def start_load_test(request: LoadTestRequest) -> Any:
+    result = loadgen_request("POST", "/start", request.model_dump())
+    record_event(
+        "load-test",
+        f"Started load test {result['id']} at {request.rps} RPS for {request.duration} seconds",
+        test_id=result["id"],
+        rps=request.rps,
+        duration=request.duration,
+    )
+    return result
+
+
+@app.get("/api/v1/load-tests")
+def list_load_tests() -> Any:
+    return loadgen_request("GET", "/tests")
+
+
+@app.get("/api/v1/load-tests/{test_id}")
+def get_load_test(test_id: str) -> Any:
+    return loadgen_request("GET", f"/tests/{test_id}")
 
 
 @app.get("/api/v1/events")

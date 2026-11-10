@@ -12,6 +12,9 @@ Commands:
   events [limit]
   scale <deployment> <replicas>
   self-heal [deployment]
+	load-test --rps <requests-per-second> --duration <seconds> [--word <word>]
+	load-tests
+	load-test-status <test-id>
   load-balancing <algorithm>
 EOF
 }
@@ -80,6 +83,54 @@ case "$command" in
 		request POST "/api/v1/self-heal" \
 			"Triggered self-healing for $deployment" \
 			"{\"deployment\":\"$deployment\"}"
+		;;
+	load-test)
+		shift
+		rps=""
+		duration=""
+		word="hello"
+		while [[ "$#" -gt 0 ]]; do
+			case "$1" in
+				--rps)
+					[[ "$#" -ge 2 ]] || { usage >&2; exit 2; }
+					rps="$2"
+					shift 2
+					;;
+				--duration)
+					[[ "$#" -ge 2 ]] || { usage >&2; exit 2; }
+					duration="$2"
+					shift 2
+					;;
+				--word)
+					[[ "$#" -ge 2 ]] || { usage >&2; exit 2; }
+					word="$2"
+					shift 2
+					;;
+				*)
+					usage >&2
+					exit 2
+					;;
+			esac
+		done
+		[[ "$rps" =~ ^[1-9][0-9]*$ && "$duration" =~ ^[1-9][0-9]*$ ]] || {
+			printf 'ERROR: --rps and --duration must be positive integers.\n' >&2
+			exit 2
+		}
+		[[ "$word" =~ ^[A-Za-z]+$ ]] || {
+			printf 'ERROR: --word must contain letters only.\n' >&2
+			exit 2
+		}
+		request POST "/api/v1/load-tests" \
+			"Started load test at $rps RPS for $duration seconds" \
+			"{\"rps\":$rps,\"duration\":$duration,\"word\":\"$word\"}"
+		;;
+	load-tests)
+		[[ "$#" -eq 1 ]] || { usage >&2; exit 2; }
+		request GET "/api/v1/load-tests" "Retrieved load-test history"
+		;;
+	load-test-status)
+		[[ "$#" -eq 2 ]] || { usage >&2; exit 2; }
+		request GET "/api/v1/load-tests/$2" "Retrieved load-test $2"
 		;;
 	load-balancing)
 		[[ "$#" -eq 2 ]] || { usage >&2; exit 2; }
