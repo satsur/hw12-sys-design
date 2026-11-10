@@ -40,8 +40,13 @@
         .card-value { display: block; margin-top: 10px; font: 700 1.8rem/1 Arial, sans-serif; }
         .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; }
         .chart-panel, .events { padding: 18px; }
+        .wide { grid-column: 1 / -1; }
         h2 { margin: 0 0 14px; font-size: 1.15rem; font-weight: 600; }
         .chart-wrap { height: 280px; position: relative; }
+        .test-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .test-stat { padding: 12px; background: #f5f7f6; border: 1px solid var(--line); border-radius: 4px; }
+        .test-stat-label { color: var(--muted); display: block; font: 700 .68rem/1.2 Arial, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+        .test-stat-value { display: block; margin-top: 7px; font: 700 1.25rem/1 Arial, sans-serif; }
         #event-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; font-family: Arial, sans-serif; }
         #event-list li { border-top: 1px solid var(--line); padding-top: 10px; font-size: .86rem; }
         .event-time { color: var(--muted); display: block; font-size: .74rem; margin-bottom: 3px; }
@@ -50,8 +55,9 @@
             header { align-items: start; flex-direction: column; }
             .cards, .grid { grid-template-columns: 1fr 1fr; }
             .grid { display: grid; }
+            .test-summary { grid-template-columns: 1fr 1fr; }
         }
-        @media (max-width: 480px) { .cards, .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { .cards, .grid, .test-summary { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -78,6 +84,17 @@
         <article class="chart-panel">
             <h2>Wordle API replicas</h2>
             <div class="chart-wrap"><canvas id="replica-chart"></canvas></div>
+        </article>
+        <article class="chart-panel wide">
+            <h2>Load-test latency percentiles</h2>
+            <div class="test-summary">
+                <div class="test-stat"><span class="test-stat-label">Latest test</span><strong id="test-status" class="test-stat-value">--</strong></div>
+                <div class="test-stat"><span class="test-stat-label">p50 latency</span><strong id="test-p50" class="test-stat-value">--</strong></div>
+                <div class="test-stat"><span class="test-stat-label">p95 latency</span><strong id="test-p95" class="test-stat-value">--</strong></div>
+                <div class="test-stat"><span class="test-stat-label">Success rate</span><strong id="test-success" class="test-stat-value">--</strong></div>
+            </div>
+            <div id="test-info" class="intro">Run a load test from the CLI to populate this chart.</div>
+            <div class="chart-wrap"><canvas id="load-test-chart"></canvas></div>
         </article>
         <article class="events">
             <h2>Control-plane events</h2>
