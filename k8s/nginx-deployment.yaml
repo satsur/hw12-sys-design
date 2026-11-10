@@ -19,12 +19,3 @@ spec:
           image: nginx-proxy:latest
           ports:
             - containerPort: 8080
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/nginx_proxy.conf
-              subPath: nginx_proxy.conf
-              readOnly: true
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: nginx-proxy-config

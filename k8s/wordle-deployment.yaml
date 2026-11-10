@@ -26,4 +26,10 @@ spec:
             -
               name: WORDLE_ANSWER
               value: "DESKS"
+            -
+              name: WORDLE_MAX_IN_FLIGHT
+              value: "4"
+            -
+              name: WORDLE_DELAY_MS
+              value: "50"
  

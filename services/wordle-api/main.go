@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand/v2"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
 var answer string
+var requestSlots = make(chan struct{}, 4)
+var processingDelay = 50 * time.Millisecond
 
 type ResponseBody struct {
 	Results []string
@@ -38,18 +40,15 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		simulateLatency()
+		requestSlots <- struct{}{}
+		defer func() { <-requestSlots }()
+		time.Sleep(processingDelay)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-func simulateLatency() {
-	ms := 10 + rand.IntN(90)
-	time.Sleep(time.Duration(ms) * time.Millisecond)
 }
 
 func init() {
@@ -67,6 +66,7 @@ func init() {
 }
 
 func main() {
+	configureCapacity()
 	port := os.Getenv("WORDLE_PORT")
 	if port == "" {
 		port = "8080"
@@ -74,4 +74,20 @@ func main() {
 	fmt.Println("Now listening on port " + port)
 	http.HandleFunc("/wordle", handleRequest)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func configureCapacity() {
+	maxInFlight := environmentInt("WORDLE_MAX_IN_FLIGHT", 4)
+	delayMS := environmentInt("WORDLE_DELAY_MS", 50)
+	requestSlots = make(chan struct{}, maxInFlight)
+	processingDelay = time.Duration(delayMS) * time.Millisecond
+	fmt.Printf("Capacity configured: %d concurrent requests, %d ms processing delay\n", maxInFlight, delayMS)
+}
+
+func environmentInt(name string, fallback int) int {
+	value, err := strconv.Atoi(os.Getenv(name))
+	if err != nil || value < 1 {
+		return fallback
+	}
+	return value
 }

@@ -43,9 +43,6 @@ def main() -> None:
     heal = subparsers.add_parser("self-heal")
     heal.add_argument("deployment", nargs="?", default="wordle-api")
 
-    balancing = subparsers.add_parser("load-balancing")
-    balancing.add_argument("algorithm")
-
     args = parser.parse_args()
     if args.command == "status":
         request("GET", "/api/v1/status")
@@ -55,9 +52,6 @@ def main() -> None:
         request("POST", "/api/v1/scale", {"deployment": args.deployment, "replicas": args.replicas})
     elif args.command == "self-heal":
         request("POST", "/api/v1/self-heal", {"deployment": args.deployment})
-    elif args.command == "load-balancing":
-        request("POST", "/api/v1/load-balancing", {"algorithm": args.algorithm})
-
 
 if __name__ == "__main__":
     main()

@@ -15,7 +15,6 @@ Commands:
 	load-test --rps <requests-per-second> --duration <seconds> [--word <word>]
 	load-tests
 	load-test-status <test-id>
-  load-balancing <algorithm>
 EOF
 }
 
@@ -131,12 +130,6 @@ case "$command" in
 	load-test-status)
 		[[ "$#" -eq 2 ]] || { usage >&2; exit 2; }
 		request GET "/api/v1/load-tests/$2" "Retrieved load-test $2"
-		;;
-	load-balancing)
-		[[ "$#" -eq 2 ]] || { usage >&2; exit 2; }
-		request POST "/api/v1/load-balancing" \
-			"Requested load-balancing algorithm $2" \
-			"{\"algorithm\":\"$2\"}"
 		;;
 	-h|--help)
 		usage

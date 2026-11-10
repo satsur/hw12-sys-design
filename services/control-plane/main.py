@@ -1,6 +1,5 @@
 import asyncio
 import json
-import re
 import time
 from collections import deque
 from contextlib import asynccontextmanager, suppress
@@ -20,8 +19,6 @@ METRICS_INTERVAL_SECONDS = 5
 METRICS_BUFFER_SIZE = 300
 NGINX_SERVICE_URL = "http://nginx-service:80"
 LOADGEN_SERVICE_URL = "http://loadgen-service:8080"
-NGINX_CONFIGMAP_NAME = "nginx-proxy-config"
-SUPPORTED_LOAD_BALANCERS = {"round_robin", "least_conn"}
 
 
 class ScaleRequest(BaseModel):
@@ -31,10 +28,6 @@ class ScaleRequest(BaseModel):
 
 class SelfHealRequest(BaseModel):
     deployment: str = "wordle-api"
-
-
-class LoadBalancingRequest(BaseModel):
-    algorithm: str
 
 
 class LoadTestRequest(BaseModel):
@@ -264,62 +257,6 @@ def self_heal(request: SelfHealRequest) -> dict[str, Any]:
         "deployment": request.deployment,
         "deleted_pod": victim.metadata.name,
         "status": "accepted",
-    }
-
-
-@app.post("/api/v1/load-balancing")
-def load_balancing(request: LoadBalancingRequest) -> dict[str, str]:
-    if request.algorithm not in SUPPORTED_LOAD_BALANCERS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"algorithm must be one of: {', '.join(sorted(SUPPORTED_LOAD_BALANCERS))}",
-        )
-
-    apps, core = kubernetes_clients()
-    try:
-        config_map = core.read_namespaced_config_map(NGINX_CONFIGMAP_NAME, "default")
-        config_text = (config_map.data or {}).get("nginx_proxy.conf", "")
-        directive = "    least_conn;\n" if request.algorithm == "least_conn" else ""
-        updated_config, replacements = re.subn(
-            r"(upstream wordle-api \{\n)(?:\s+least_conn;\n)?(\s+server wordle-api-service:8080;)",
-            rf"\1{directive}\2",
-            config_text,
-            count=1,
-        )
-        if replacements != 1:
-            raise HTTPException(status_code=500, detail="Nginx upstream configuration was not recognized")
-        core.patch_namespaced_config_map(
-            NGINX_CONFIGMAP_NAME,
-            "default",
-            {"data": {"nginx_proxy.conf": updated_config}},
-        )
-        apps.patch_namespaced_deployment(
-            "nginx-proxy",
-            "default",
-            {
-                "spec": {
-                    "template": {
-                        "metadata": {
-                            "annotations": {
-                                "control-plane/algorithm-updated": datetime.now(timezone.utc).isoformat()
-                            }
-                        }
-                    }
-                }
-            },
-        )
-    except client.exceptions.ApiException as error:
-        raise HTTPException(status_code=error.status or 500, detail=error.body) from error
-
-    record_event(
-        "load-balancing",
-        f"Set Nginx load-balancing algorithm to {request.algorithm}",
-        algorithm=request.algorithm,
-    )
-    return {
-        "status": "accepted",
-        "algorithm": request.algorithm,
-        "message": "Nginx rollout started with the new algorithm.",
     }
 
 
