@@ -17,10 +17,10 @@ spec:
       containers:
         - name: loadgen
           image: loadgen:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           env:
             - name: LOADGEN_TARGET_URL
-              value: "http://nginx-service:80/wordle"
+              value: "http://nginx-service:8080/wordle"
             - name: LOADGEN_PORT
               value: "8080"
           ports:

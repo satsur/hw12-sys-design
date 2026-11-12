@@ -3,12 +3,12 @@ kind: Service
 metadata:
   name: nginx-service
 spec:
-  type: ClusterIP # might update to LoadBalancer?
+  type: LoadBalancer
   selector:
     app: nginx-proxy
   ports:
     - 
       name: http
-      port: 80
+      port: 8080
       targetPort: 8080
       protocol: TCP

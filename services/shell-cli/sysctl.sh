@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTROL_PLANE_URL="${CONTROL_PLANE_URL:-http://localhost:5000}"
+CONTROL_PLANE_URL="${CONTROL_PLANE_URL:-http://localhost:8080}"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {

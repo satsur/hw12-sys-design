@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 DEFAULT_DEPLOYMENTS = ("wordle-api", "nginx-proxy", "web")
 METRICS_INTERVAL_SECONDS = 5
 METRICS_BUFFER_SIZE = 300
-NGINX_SERVICE_URL = "http://nginx-service:80"
+NGINX_SERVICE_URL = "http://nginx-service:8080"
 LOADGEN_SERVICE_URL = "http://loadgen-service:8080"
 
 

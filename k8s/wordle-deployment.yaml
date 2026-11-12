@@ -17,6 +17,7 @@ spec:
       containers:
         - name: wordle-api
           image: wordle-api:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
