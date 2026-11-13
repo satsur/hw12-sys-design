@@ -184,14 +184,14 @@ replaceable.
 
 ## Documentation Map
 
-- [OUTPUT.md](OUTPUT.md): build, deployment, access, and CLI/API reference.
-- [ENTRYPOINT.md](ENTRYPOINT.md): Docker Desktop entry point and networking.
+- [DEPLOYMENT.md](DEPLOYMENT.md): build, deployment, access, and CLI/API reference.
+- [ENTRYPOINT.md](services/ENTRYPOINT.md): Docker Desktop entry point and networking.
 - [ARCHITECTURE.md](ARCHITECTURE.md): system architecture and Kubernetes
   concepts.
-- [CONTROL-PLANE.md](CONTROL-PLANE.md): control-plane responsibilities,
+- [CONTROL-PLANE.md](services/control-plane/CONTROL-PLANE.md): control-plane responsibilities,
   permissions, and API.
-- [LOADGEN.md](LOADGEN.md): load-test request/result schemas and experiments.
-- [METRICS-DESIGN.MD](METRICS-DESIGN.MD): metrics collection and dashboard
+- [LOADGEN.md](services/loadgen/LOADGEN.md): load-test request/result schemas and experiments.
+- [METRICS-DESIGN.MD](services/web/METRICS-DESIGN.MD): metrics collection and dashboard
   design.
 - [TODO.md](TODO.md): remaining cleanup work.
 
